@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>轻音少女 - 相遇天使</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <style>
+        /* 省略之前的所有CSS，保持原样，以下为新增或修改部分 */
+        /* 增加角色卡片悬停动画 */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 4px #e86b9a; }
+            50% { box-shadow: 0 0 12px #e86b9a; }
+            100% { box-shadow: 0 0 4px #e86b9a; }
+        }
+        .character-card:hover {
+            animation: pulse 1s infinite;
+        }
+        /* 增加快退快进按钮样式（可选） */
+        .control-btn.skip-back,
+        .control-btn.skip-forward {
+            background: linear-gradient(135deg, #d45a89, #c24a78);
+        }
+        /* 小动画提示（可选） */
+        
+    </style>
+</head>
+<body>
+    <div class="poster-container floating">
+        <div class="header">
+            <h1>轻音少女</h1>
+            <div class="subtitle">相遇天使 - 交互式音乐海报</div>
+        </div>
+        <div class="content">
+            <div class="character-section">
+                <h2>轻音部成员</h2>
+                <div class="character-grid">
+                    <div class="character-card" data-character="yui">
+                        <img src="屏幕截图 2025-09-08 154017.png" alt="平泽唯">
+                        <div class="character-name">平泽唯</div>
+                    </div>
+                    <div class="character-card" data-character="mio">
+                        <img src="mio.jpg" alt="秋山澪"/>
+                        <div class="character-name">秋山澪</div>
+                    </div>
+                    <div class="character-card" data-character="ritsu">
+                        <img src="lujiang.webp" alt="田井中律"/>
+                        <div class="character-name">田井中律</div>
+                    </div>
+                    <div class="character-card" data-character="tsumugi">
+                        <img src="chou.webp" alt="琴吹䌷"/>
+                        <div class="character-name">琴吹䌷</div>
+                    </div>
+                    <div class="character-card" data-character="azusa">
+                        <img src="azi.webp" alt="中野梓"/>
+                        <div class="character-name">中野梓</div>
+                    </div>
+                </div>
+            </div>
+            <div class="music-section">
+                <h2>相遇天使</h2>
+                <div class="album-cover">
+                    <img src="xiangyu.webp" alt="相遇天使专辑封面"/>
+                </div>
+                <!-- 增加快退快进按钮 -->
+                <div class="music-controls">
+                    <button class="control-btn prev-btn">
+                        <i class="fas fa-backward"></i>
+                    </button>
+                    <button class="control-btn skip-back">
+                        <i class="fas fa-backward-fast"></i>
+                    </button>
+                    <button class="control-btn play-pause">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <button class="control-btn skip-forward">
+                        <i class="fas fa-forward-fast"></i>
+                    </button>
+                    <button class="control-btn next-btn">
+                        <i class="fas fa-forward"></i>
+                    </button>
+                </div>
+                <div class="music-info">
+                    <div class="song-title">相遇天使 - 放课后茶会</div>
+                    <div class="progress-container" id="progress-container">
+                        <div class="progress-bar" id="progress-bar"></div>
+                    </div>
+                    <div class="time-info">
+                        <span id="current-time">0:00</span>
+                        <span id="duration">0:00</span>
+                    </div>
+                    <div class="volume-control">
+                        <i class="fas fa-volume-up"></i>
+                        <input type="range" class="volume-slider" min="0" max="1" step="0.1" value="0.7"/>
+                    </div>
+                    <div class="lyrics">
+                        <p>歌：放课后茶会</p>
+                        <p>作曲：前泽宽之</p>
+                        <p>作词：平泽唯</p>
+                        <p>毕业不是终点，我们的故事还在继续</p>
+                        <p>相遇天使，感谢与你相遇的每一天</p>
+                        <p>轻音部的回忆，永远珍藏心底</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <p>《轻音少女》交互式海报 | 背景音乐: 相遇天使</p>
+            <p>图片来源于网络，仅用于展示目的</p>
+        </div>
+    </div>
+    <!-- 角色详情弹窗 -->
+    <div class="character-modal" id="character-modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-modal">&times;</span>
+            <img src="" alt="" class="modal-character-img" id="modal-character-img"/>
+            <h2 class="modal-character-name" id="modal-character-name">角色名</h2>
+            <p class="modal-character-desc" id="modal-character-desc">角色描述</p>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 音频资源，推荐换成正式的资源路径
+            const audio = new Audio();
+            // 使用示意的音乐资源
+            audio.src = '25766467918-1-192_1.mp3';
+            audio.volume = 0.7;
+
+            // 播放/暂停按钮
+            const playPauseBtn = document.querySelector('.play-pause');
+            const playIcon = playPauseBtn.querySelector('i');
+            let isPlaying = false;
+
+            // 进度条元素
+            const progressBar = document.getElementById('progress-bar');
+            const progressContainer = document.getElementById('progress-container');
+            const currentTimeEl = document.getElementById('current-time');
+            const durationEl = document.getElementById('duration');
+
+            // 角色数据
+            const characters = {
+                yui: {
+                    name: "平泽唯",
+                    img: "屏幕截图 2025-09-08 154017.png",
+                    desc: "轻音部吉他手，天然呆的性格但有着绝对音感。虽然开始连乐谱都不会读，但凭借惊人的天赋和努力成为了优秀的吉他手。"
+                },
+                mio: {
+                    name: "秋山澪",
+                    img: "mio.jpg",
+                    desc: "轻音部贝斯手兼作词，左撇子。性格认真，容易害羞，是轻音部中最稳重可靠的成员。虽然害怕恐怖的东西，但却是乐队中最受欢迎的角色。"
+                },
+                ritsu: {
+                    name: "田井中律",
+                    img: "lujiang.webp",
+                    desc: "轻音部部长兼鼓手，性格活泼开朗。与秋山澪是从小一起长大的好友。虽然有时显得冒失，但对乐队和朋友们非常关心。"
+                },
+                tsumugi: {
+                    name: "琴吹䌷",
+                    img: "chou.webp",
+                    desc: "轻音部键盘手，大小姐出身。性格温柔，擅长家务和料理。虽然家境富裕但平易近人，是乐队中不可或缺的调和剂。"
+                },
+                azusa: {
+                    name: "中野梓",
+                    img: "azi.webp",
+                    desc: "轻音部第二吉他手，比其他人低一年级。最初对学姐们的散漫感到无奈，但后来完全融入了轻音部的氛围。技术扎实，是乐队中的重要成员。"
+                }
+            };
+
+            // 播放/暂停功能
+            playPauseBtn.addEventListener('click', function() {
+                if (isPlaying) {
+                    audio.pause();
+                    playIcon.classList.remove('fa-pause');
+                    playIcon.classList.add('fa-play');
+                } else {
+                    audio.play().catch(e => {
+                        alert('无法自动播放音乐，请点击页面重新播放');
+                    });
+                    playIcon.classList.remove('fa-play');
+                    playIcon.classList.add('fa-pause');
+                }
+                isPlaying = !isPlaying;
+            });
+
+            // 音量控制
+            const volumeSlider = document.querySelector('.volume-slider');
+            volumeSlider.addEventListener('input', function() {
+                audio.volume = this.value;
+            });
+
+            // 更新进度条
+            audio.addEventListener('timeupdate', function() {
+                const currentTime = audio.currentTime;
+                const duration = audio.duration;
+                if (duration) {
+                    const progressPercent = (currentTime / duration) * 100;
+                    progressBar.style.width = `${progressPercent}%`;
+                    currentTimeEl.textContent = formatTime(currentTime);
+                    durationEl.textContent = formatTime(duration);
+                }
+            });
+
+            // 点击进度条跳转
+            progressContainer.addEventListener('click', function(e) {
+                const width = this.clientWidth;
+                const clickX = e.offsetX;
+                const duration = audio.duration;
+                if (duration) {
+                    audio.currentTime = (clickX / width) * duration;
+                }
+            });
+
+            function formatTime(seconds) {
+                const min = Math.floor(seconds / 60);
+                const sec = Math.floor(seconds % 60);
+                return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+            }
+
+            // 角色卡片点击效果
+            const characterCards = document.querySelectorAll('.character-card');
+            const characterModal = document.getElementById('character-modal');
+            const closeModal = document.getElementById('close-modal');
+            const modalImg = document.getElementById('modal-character-img');
+            const modalName = document.getElementById('modal-character-name');
+            const modalDesc = document.getElementById('modal-character-desc');
+
+            characterCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const characterId = this.getAttribute('data-character');
+                    const character = characters[characterId];
+                    modalImg.src = character.img;
+                    modalName.textContent = character.name;
+                    modalDesc.textContent = character.desc;
+                    characterModal.style.display = 'flex';
+                });
+            });
+
+            // 关闭弹窗
+            document.getElementById('close-modal').addEventListener('click', () => {
+                characterModal.style.display = 'none';
+            });
+            window.addEventListener('click', (e) => {
+                if (e.target === document.getElementById('character-modal')) {
+                    characterModal.style.display = 'none';
+                }
+            });
+
+            // 解决浏览器自动播放策略
+            document.body.addEventListener('click', function() {
+                if (audio.paused) {
+                    // 用户已与页面交互，可以播放音频
+                    audio.play().then(() => {
+                        audio.pause();
+                        document.querySelector('.play-pause i').classList.remove('fa-pause');
+                        document.querySelector('.play-pause i').classList.add('fa-play');
+                        isPlaying = false;
+                    });
+                }
+            }, { once: true });
+
+            // 上一曲/下一曲按钮（示例功能）
+            document.querySelector('.prev-btn').addEventListener('click', () => {
+                alert('这是第一首歌曲');
+            });
+            document.querySelector('.next-btn').addEventListener('click', () => {
+                alert('这是最后一首歌曲');
+            });
+            // 增加快退快进按钮功能
+            document.querySelector('.skip-back').addEventListener('click', () => {
+                audio.currentTime = Math.max(audio.currentTime - 10, 0);
+            });
+            document.querySelector('.skip-forward').addEventListener('click', () => {
+                if (!isNaN(audio.duration)) {
+                    audio.currentTime = Math.min(audio.currentTime + 10, audio.duration);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
